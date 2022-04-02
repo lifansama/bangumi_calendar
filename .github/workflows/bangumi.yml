@@ -1,0 +1,34 @@
+name: CI
+on:
+  push:
+   branches:
+     - master
+  schedule:
+  - cron: "0 10 * * 1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - name: Create local changes
+      run: |
+        mkdir bangumi
+        cd bangumi
+        git clone https://github.com/clverpanda/bangumi-calendar-generator.git
+        cd bangumi-calendar-generator
+        yarn install
+        yarn upgrade bangumi-data
+        yarn generate
+        cd ..
+        cd ..
+        cp ./bangumi/bangumi-calendar-generator/result/bangumi.ics .
+        rm -rf bangumi
+    - name: Commit & Push changes
+      uses: actions-js/push@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch : 'master'
